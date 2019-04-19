@@ -63,14 +63,14 @@ function searchOnEventChain(keyWord, fromDate, toDate) {
 	console.log("Start searching on EventChain");
 
 	dateFiltering = "";
-	if (fromDate != null || fromDate === "") {
+	if (fromDate) {
 		dateFiltering += " DateFrom: \\\"" + fromDate + "\\\"\\n ";
 	}
 	else {
 		dateFiltering += "";
 	}
 
-	if (toDate != null || toDate === "") {
+	if (toDate) {
 		dateFiltering += " DateTo: \\\"" + toDate + "\\\"\\n ";
 	}
 	else {
