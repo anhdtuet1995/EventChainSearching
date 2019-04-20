@@ -61,18 +61,19 @@
 <script type="text/javascript">
 	$("#searchButton").on("click", function(e){
 		e.preventDefault();
-		document.getElementById("event-list").innerHTML = "";
-		var title = $("#title").val();
-		var location = $("#location").val();
-		var fromDate = $("#fromDate").val();
-		var toDate = $("#toDate").val();
-		console.log(title);
+		// document.getElementById("event-list").innerHTML = "";
+		// var title = $("#title").val();
+		// var location = $("#location").val();
+		// var fromDate = $("#fromDate").val();
+		// var toDate = $("#toDate").val();
+		// console.log(title);
 		// searchOnEventBrite(title, encodeURI(new Date(fromDate).toISOString().substr(0, 19) + "Z"), encodeURI(new Date(toDate).toISOString().substr(0, 19)  + "Z"), location);
-		searchOnEventChain(title, fromDate, toDate);
+		//searchOnEventChain(title, fromDate, toDate);
 		// let event1 = new EventInfo("#TIFFDisruptorsLounge (Invite Only)", "Toronto, ON, CANADA", "Unite", "2019-03-02", "2019-03-02", "https://images.eventchain.io/event-media/82942200-21c9-11e9-bdd2-ef181cd9aeef", "https://eventchain.io/event-details/8693d09f010e5ed1a0e2454624e4f84e/-TIFFDisruptorsLounge_-Invite_Only-");
 		// var event1Elem = event1.createEventInfoElement();
 		// console.log(event1Elem);
 		// document.getElementById("event-list").appendChild(event1Elem); 
+		searchOnEventBrite("cannabis", "2019-04-01T00%3A47%3A14Z", "2019-04-2T00%3A47%3A19Z", null);
 		return false;
 	});
 

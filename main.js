@@ -31,7 +31,7 @@ class EventInfo {
   		profileTeaserMain.classList.add("profile-teaser-main");
   		var profileName = document.createElement("h2");
   		profileName.classList.add("profile-name");
-  		profileName.innerHTML = this.name;
+  		profileName.innerHTML = "<a href=" + this.url + ">" + this.name + "</a>";
   		profileTeaserMain.appendChild(profileName);
   		var profileInfo = document.createElement("div");
   		profileInfo.classList.add("profile-info");
@@ -127,17 +127,52 @@ function searchOnEventBrite(keyWord, fromDate, toDate, location = null) {
 	}
 
 	var settings = {
-	  "async": true,
-	  "url": url,
-	  "crossDomain": true,
-	  "method": "GET",
-	  "headers": {
-	  	"Authorization": "Bearer WY5CK4MUPSE4DQSPEDWQ",
-	  }
+	  	"async": true,
+	  	"url": url,
+	  	"crossDomain": true,
+	  	"method": "GET",
+	  	"headers": {
+	  		"Authorization": "Bearer WY5CK4MUPSE4DQSPEDWQ",
+	  	}
 	}
 
 	$.ajax(settings).done(function (response) {
-	  console.log(response);
+	  	console.log(response);
+	  	var events = response.events;
+	  	var okay = true;
+	  	for (i = 0; i < events.length; i++) {
+	  		okay = false;
+	  		var name = events[i].name.text;
+	  		var dateFrom = events[i].start.utc;
+	  		var dateTo = events[i].end.utc;
+	  		var imageUrl;
+	  		if (events[i].logo) {
+	  			imageUrl = events[i].logo.url;
+	  		} else {
+	  			imageUrl = "no-img.png";
+	  		}
+	  		var url = events[i].url;
+	  		var organizer_id = events[i].organizer_id;
+	  		var venue_id = events[i].organizer_id;
+	  		$.ajax({
+	  			//get organizer
+	  			"url": "https://www.eventbriteapi.com/v3/venues/" + venue_id,
+	  			"method": "GET",
+	  			"headers": {
+			  		"Authorization": "Bearer WY5CK4MUPSE4DQSPEDWQ",
+			  		"Content-Type": "application/x-www-form-urlencoded"
+			  	}
+	  		}).done(function(venueRes) {
+	  			okay = true;
+	  			var locationName = venueRes.name;
+	  			var organizer = "organizerRes.name";	
+	  			let event = new EventInfo(name, locationName, organizer, dateFrom, dateTo, imageUrl, url);
+	  			var elem = event.createEventInfoElement();
+	  			document.getElementById("event-list").appendChild(elem);
+	  		});
+	  	}
+
+	  	console.log("Done");
 	});
 
 }
