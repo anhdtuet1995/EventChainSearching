@@ -4,6 +4,9 @@ var cachingRes = [];
 var currPage = -1;
 var currEventBritePage = 0;
 var eventBritePageCount = 0;
+const eventBritePageSize = 50;
+
+
 class EventInfo {
 	constructor(name, location, organizer, dateFrom, dateTo, image, url) {
 		this.name = name;
@@ -71,8 +74,16 @@ function initSearch(keyWord, fromDate, toDate, location, loadingSuccess, loading
 	searchOnEventChain(keyWord, fromDate, toDate, location, 
 		function(evcSuccessResult){
 			cachingRes.concat(evcSuccessResult);
+			//if first page is not enough page size
 			if (cachingRes.length < numberEventInOnePage) {
+				permute = searchOnEventBrite(keyWord, fromDate, toDate, location, 
+					function(ebSuccessResult){
 
+					},
+					function(ebError) {
+
+					}
+				);
 			}
 		}, function(evcError){
 
@@ -85,7 +96,7 @@ function prevPage() {
 }
 
 function nextPage(keyWord, fromDate, toDate, location, loadingSuccess, loadingFail) {
-	if ()
+	//if ()
 }
 
 function searchOnEventChain(keyWord, fromDate, toDate, location, eventchainSuccess, eventchainFailed) {
@@ -190,6 +201,10 @@ function searchOnEventBrite(keyWord, fromDate, toDate, location, eventbriteSucce
 		.done(function (response) {
 			console.log(response);
 			var result = [];
+			//set number of eventbrite page 
+			if (currEventBritePage == 0) {
+				eventBritePageCount = response.pagination.page_count;
+			}
 			var events = response.events;
 			for (let i = 0; i < events.length; i++) {
 				var name = events[i].name.text;
