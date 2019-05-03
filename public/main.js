@@ -52,7 +52,7 @@ function initSearch(keyWord, fromDate, toDate, location, loadingSuccess, loading
 				console.log(currPage);
 			}
 		}, function(evcError){
-			loadingFail(ebError);
+			loadingFail(evcError);
 		}
 	);
 }
