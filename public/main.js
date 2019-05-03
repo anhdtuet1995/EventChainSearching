@@ -1,102 +1,130 @@
 var oauthEventbriteKey = "WY5CK4MUPSE4DQSPEDWQ";
 var numberEventInOnePage = 10;
 var cachingRes = [];
-var currPage = -1;
-var currEventBritePage = 0;
+var currPage = 0;
+var currEventBritePage = -1;
 var eventBritePageCount = 0;
-const eventBritePageSize = 50;
-
-
-class EventInfo {
-	constructor(name, location, organizer, dateFrom, dateTo, image, url) {
-		this.name = name;
-		this.location =  location;
-		this.organizer =  organizer;
-		this.dateFrom =  dateFrom;
-		this.dateTo =  dateTo;
-		this.image =  image;
-		this.url =  url;
-	}
-
-	createEventInfoElement() {
-		var listGroup = document.createElement("div");
-		listGroup.classList.add("list-group-item");
-		listGroup.classList.add("clearfix");
-
-		var profileTeaserLeft = document.createElement("div");
-		profileTeaserLeft.classList.add("profile-teaser-left");
-		var profileImage = document.createElement("div");
-		profileImage.classList.add("profile-img");
-		var imgProfile = document.createElement("img");
-		if (this.image) {
-			imgProfile.src = this.image;
-		} else {
-			imgProfile.src = "no-img.png";
-		}
-		profileImage.appendChild(imgProfile);
-		profileTeaserLeft.appendChild(profileImage);
-		listGroup.appendChild(profileTeaserLeft);
-
-		var profileTeaserMain = document.createElement("div");
-		profileTeaserMain.classList.add("profile-teaser-main");
-		var profileName = document.createElement("h3");
-		profileName.classList.add("profile-name");
-		profileName.innerHTML = "<a target='_blank' href=" + this.url + " >" + this.name + "</a>";
-		profileTeaserMain.appendChild(profileName);
-		var profileInfo = document.createElement("div");
-		profileInfo.classList.add("profile-info");
-
-		var dateInfo = document.createElement("div");
-		dateInfo.classList.add("info");
-		dateInfo.innerHTML = "<span>Date: </span> " + this.dateFrom;
-		profileInfo.appendChild(dateInfo);
-
-		var locationInfo = document.createElement("div");
-		locationInfo.classList.add("info");
-		locationInfo.innerHTML = "<span>Location: </span> " + this.location;
-		profileInfo.appendChild(locationInfo);
-
-		var organizerInfo = document.createElement("div");
-		organizerInfo.classList.add("info");
-		organizerInfo.innerHTML = "<span>Organizer: </span> " + this.organizer;
-		profileInfo.appendChild(organizerInfo);
-
-		profileTeaserMain.appendChild(profileInfo);
-		listGroup.appendChild(profileTeaserMain);
-		return listGroup;
-	}
-}
+var currTitle = "";
+var currLocation = "";
+var currDateFrom = "";
+var currDateTo = "";
 
 function initSearch(keyWord, fromDate, toDate, location, loadingSuccess, loadingFail) {
 	currPage = 0;
-	currEventBritePage = 0;
+	var eventsInOnePage = [];
+	cachingRes = [];
+	//store current searching filter
+	currTitle = keyWord;
+	currLocation = location;
+	currDateFrom = fromDate;
+	currDateTo = toDate;
+
 	//always search on eventchain first
 	searchOnEventChain(keyWord, fromDate, toDate, location, 
 		function(evcSuccessResult){
-			cachingRes.concat(evcSuccessResult);
+			console.log('Get eventchain done!!!!!!!!');
+			
+			cachingRes.push(...evcSuccessResult);
 			//if first page is not enough page size
 			if (cachingRes.length < numberEventInOnePage) {
-				permute = searchOnEventBrite(keyWord, fromDate, toDate, location, 
+				searchOnEventBrite(keyWord, fromDate, toDate, location, 
 					function(ebSuccessResult){
-
+						cachingRes.push(...ebSuccessResult);
+						for (i = 0; i < numberEventInOnePage; i++) {
+							if (cachingRes[i]) {
+								eventsInOnePage.push(cachingRes[i]);
+							}
+						}
+						console.log(currPage);
+						loadingSuccess(eventsInOnePage);
 					},
 					function(ebError) {
-
+						loadingFail(ebError);
 					}
 				);
+			} else {
+				for (i = 0; i < numberEventInOnePage; i++) {
+					if (cachingRes[i]) {
+						eventsInOnePage.push(cachingRes[i]);			
+					}
+				}
+				loadingSuccess(eventsInOnePage);
+				console.log(currPage);
 			}
 		}, function(evcError){
-
+			loadingFail(ebError);
 		}
 	);
 }
 
-function prevPage() {
-
+function prevPage(loadingSuccess, loadingFail) {
+	var eventsInOnePage = [];
+	if (currPage > 0) {
+		currPage--;
+	}
+	//if number of event is enough to fill one page
+	var currPos = currPage * numberEventInOnePage;
+	for (i = currPos; i < currPos + 10; i++) {
+		if (cachingRes[i]) {
+			eventsInOnePage.push(cachingRes[i]);
+		}
+	}
+	loadingSuccess(eventsInOnePage);
+	console.log(currPage);
 }
 
-function nextPage(keyWord, fromDate, toDate, location, loadingSuccess, loadingFail) {
-	//if ()
+function nextPage(loadingSuccess, loadingFail) {
+	var eventsInOnePage = [];
+	if (cachingRes.length - (currPage + 1) * numberEventInOnePage >= numberEventInOnePage) {
+		//if number of event is enough to fill one page
+		console.log("nextPage 1");
+		currPage++;
+		var currPos = currPage * numberEventInOnePage;
+		for (i = currPos; i < currPos + numberEventInOnePage; i++) {
+			eventsInOnePage.push(cachingRes[i]);
+		}
+		loadingSuccess(eventsInOnePage);
+		console.log(currPage);
+	} else {
+		//need get more events
+		if (currEventBritePage < eventBritePageCount) {
+			//if still get more events
+			console.log("nextPage 2");
+			searchOnEventBrite(currTitle, currDateFrom, currDateTo, currLocation, 
+				function(ebSuccessResult){
+					currPage++;
+					cachingRes.push(...ebSuccessResult);
+					var currPos = currPage * numberEventInOnePage;
+					for (i = currPos; i < currPos + numberEventInOnePage; i++) {
+						if (cachingRes[i]) {
+							eventsInOnePage.push(cachingRes[i]);
+						}
+					}
+					console.log(currPage);
+					loadingSuccess(eventsInOnePage);
+				},
+				function(ebError) {
+					loadingFail(ebError);
+				},
+				currEventBritePage + 1
+			);
+		} else {
+			//all events were got
+			console.log("nextPage 3");
+			if (cachingRes.length - (currPage + 1) * numberEventInOnePage <= 0) {
+				loadingFail(null);
+			} else {
+				currPage++;
+				var currPos = currPage * numberEventInOnePage;
+				for (i = currPos; i < currPos + numberEventInOnePage; i++) {
+					if (cachingRes[i]) {
+						eventsInOnePage.push(cachingRes[i]);
+					}
+				}
+				loadingSuccess(eventsInOnePage);
+			}
+		} 
+	}
 }
 
 function searchOnEventChain(keyWord, fromDate, toDate, location, eventchainSuccess, eventchainFailed) {
@@ -127,6 +155,8 @@ function searchOnEventChain(keyWord, fromDate, toDate, location, eventchainSucce
 	console.log(settings);
 
 	$.ajax(settings).done(function (response) {
+		console.log(response);
+
 		var events = response.data.getEvents;
 		var result = [];
 		for (var i = 0; i < events.length; i++) {
@@ -151,9 +181,8 @@ function searchOnEventChain(keyWord, fromDate, toDate, location, eventchainSucce
 				let event = new EventInfo(name, locationName, organizer, dateFrom, dateTo, imageUrl, url);
 				result.push(event);
 			}
-			eventchainSuccess(result);
 		}
-
+		eventchainSuccess(result);
 		console.log("Done");
 	}).fail(function(error) {
 		console.log(error);
@@ -176,11 +205,11 @@ function searchOnEventBrite(keyWord, fromDate, toDate, location, eventbriteSucce
 	}
 
 	if (fromDate) {
-		url += "&date_modified.range_start=" + encodeURI(new Date(fromDate).toISOString().substr(0, 19) + "Z");
+		url += "&start_date.range_start=" + encodeURI(new Date(fromDate).toISOString().substr(0, 19) + "Z");
 	}
 
 	if (toDate) {
-		url += "&date_modified.range_end=" + encodeURI(new Date(toDate).toISOString().substr(0, 19)  + "Z");
+		url += "&start_date.range_end=" + encodeURI(new Date(toDate).toISOString().substr(0, 19)  + "Z");
 	}
 
 	if (page && page > 0) {
@@ -201,10 +230,10 @@ function searchOnEventBrite(keyWord, fromDate, toDate, location, eventbriteSucce
 		.done(function (response) {
 			console.log(response);
 			var result = [];
-			//set number of eventbrite page 
-			if (currEventBritePage == 0) {
-				eventBritePageCount = response.pagination.page_count;
-			}
+			//store page number and page count
+			currEventBritePage = response.pagination.page_number;
+			eventBritePageCount = response.pagination.page_count;
+		
 			var events = response.events;
 			for (let i = 0; i < events.length; i++) {
 				var name = events[i].name.text;
@@ -214,7 +243,7 @@ function searchOnEventBrite(keyWord, fromDate, toDate, location, eventbriteSucce
 				if (events[i].logo) {
 					imageUrl = events[i].logo.url;
 				} else {
-					imageUrl = "no-img.png";
+					imageUrl = "public/no-img.png";
 				}
 				var url = events[i].url;
 				var organizer;
