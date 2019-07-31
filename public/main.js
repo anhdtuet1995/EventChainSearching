@@ -175,7 +175,7 @@ function searchOnEventChain(keyWord, fromDate, toDate, location, eventchainSucce
 
 			var locationName = [addressObj.City, addressObj.ProvinceName, addressObj.CountryName].filter(Boolean).join(", ");
 
-			var url = "";
+			var url = "https://eventchain.io/event-details/" + events[i].ID;
 
 			if (fullAddress.includes(location.toLowerCase())) {
 				let event = new EventInfo(name, locationName, organizer, dateFrom, dateTo, imageUrl, url);
